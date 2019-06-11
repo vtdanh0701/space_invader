@@ -11,12 +11,16 @@ var player ={
 }
 var timeWhenStart = Date.now();
 var bulletList ={};
+var enemyBulletList = {};
+var bossBullet ={}
 var enemyList ={};
-var bossList ={};
 var bonusList ={};
+var bossList ={};
 var score = 0;
+var level = 1;
 var frame = 0;
-var boss = false;
+var isBoss = false;
+var timeUpgrading = 900;
 
 function createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,id){
     var enemy = {
@@ -32,7 +36,8 @@ function createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,id){
     }
     enemyList[id] = enemy;
 }
-function createBoss(xSpeed,ySpeed,x,y,width,height,color,hp,id){
+
+function createBoss(xSpeed,ySpeed,x,y,width,height,color,hp,atkSpd,id){
     var boss = {
         xSpeed: xSpeed,
         ySpeed: ySpeed,
@@ -42,22 +47,25 @@ function createBoss(xSpeed,ySpeed,x,y,width,height,color,hp,id){
         height: height,
         color: color,
         hp : hp,
+        atkSpd : atkSpd,
         id: id
     }
     bossList[id] = boss;
 }
-function summonBoss(){
+function boss1(){
     var xSpeed = -2 + Math.random()*3;
-    var ySpeed = 1+ Math.random()*3;
-    var x = 250
+    var ySpeed = 2;
+    var x = 250;
     var y = 0;
     var width = 100;
-    var height = 40;
+    var height = 30;
     var color = "pink";
-    var hp = 500;
+    var hp = 100 + level*2;
+    var atkSpd = -2 - level;
     var id = Math.random()
-    createBoss(xSpeed,ySpeed,x,y,width,height,color,hp,id);
+    createBoss(xSpeed,ySpeed,x,y,width,height,color,hp,atkSpd,id);
 }
+
 function randomEnemy1(){
     var xSpeed = -2 + Math.random()*3;
     var ySpeed = 1+ Math.random()*3;
@@ -66,7 +74,7 @@ function randomEnemy1(){
     var width = 60;
     var height = 20;
     var color = "red";
-    var hp = 1;
+    var hp = 1 + level;
     var id = Math.random()
     createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,id);
 }
@@ -78,7 +86,7 @@ function randomEnemy2(){
     var width = 60;
     var height = 20;
     var color = "blue";
-    var hp = 3;
+    var hp = 3+level;
     var id = Math.random()
     createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,id);
 }
@@ -90,13 +98,14 @@ function randomEnemy3(){
     var width = 80;
     var height = 20;
     var color = "orange";
-    var hp = 20;
+    var hp = 20 + level;
     var id = Math.random()
     createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,id);
 }
-function createBullet(ySpeed,x,y,height,width,color,id){
+function createBullet(ySpeed,xSpeed,x,y,height,width,color,id){
     var bullet = {
         ySpeed : ySpeed,
+        xSpeed : xSpeed,
         x: x,
         y: y,
         height : height,
@@ -106,16 +115,40 @@ function createBullet(ySpeed,x,y,height,width,color,id){
     }
     bulletList[id] = bullet;
 }
-function generateBullet(){
-    var ySpeed = player.atkSpd;
-    var x = player.x;
-    var y = player.y;
+function createEnemyBullet(ySpeed,x,y,height,width,color,id){
+    var bullet = {
+        ySpeed : ySpeed,
+        x: x,
+        y: y,
+        height : height,
+        width: width,
+        color: color,
+        id: id
+    }
+    enemyBulletList[id] = bullet;
+}
+function generateBullet(shooter,side,angle){
+    var ySpeed = shooter.atkSpd;
+    var xSpeed = angle;
+    var x = shooter.x+side;
+    var y = shooter.y;
     var height = 10;
     var width = 4;
     var color = "black";
     var id = Math.random();
-    createBullet(ySpeed,x,y,height,width,color,id);
+    createBullet(ySpeed,xSpeed,x,y,height,width,color,id);
 }
+function generateEnemyBullet(shooter){
+    var ySpeed = shooter.atkSpd;
+    var x = shooter.x;
+    var y = shooter.y;
+    var height = 10;
+    var width = 4;
+    var color = "black";
+    var id = Math.random();
+    createEnemyBullet(ySpeed,x,y,height,width,color,id);
+}
+
 function createBonus(x,y,width,height,color,category,id){
     var bonus ={
         x:y,
@@ -152,21 +185,21 @@ function drawActor(actor){
     ctx.fillRect(actor.x-actor.width/2,actor.y-actor.height/2,actor.width,actor.height);
     ctx.restore();
 }
- function updateChasingEnemyPosition(enemy){
-        enemy.x += enemy.xSpeed;
-        enemy.y += enemy.ySpeed;
-        var distX = enemy.x - player.x;
-        var distY = enemy.y - player.y;
-        if(distX > 0){
-            enemy.x -= enemy.xSpeed+1;
-        }
-        else if(distX <= 0){
-            enemy.x += enemy.xSpeed;
-        }
-        if(distY > 0){
-            enemy.y -= enemy.ySpeed;
-        }
- }
+//  function updateChasingEnemyPosition(enemy){
+//         enemy.x += enemy.xSpeed;
+//         enemy.y += enemy.ySpeed;
+//         var distX = enemy.x - player.x;
+//         var distY = enemy.y - player.y;
+//         if(distX > 0){
+//             enemy.x -= enemy.xSpeed+1;
+//         }
+//         else if(distX <= 0){
+//             enemy.x += enemy.xSpeed;
+//         }
+//         if(distY > 0){
+//             enemy.y -= enemy.ySpeed;
+//         }
+//  }
  function updateRandomEnemyPosition(enemy){
         enemy.x += enemy.xSpeed;
         enemy.y += enemy.ySpeed;
@@ -180,12 +213,19 @@ function drawActor(actor){
  
  function updateBulletPosition(bullet){
      bullet.y -= bullet.ySpeed;
+     bullet.x += bullet.xSpeed/2;
  }
+ function updateBossBulletPosition(bullet){
+    bullet.y -= bullet.ySpeed;
+}
  function updateBullet(bullet){
      drawActor(bullet);
      updateBulletPosition(bullet);
  }
-
+function updateBossBullet(bullet){
+    drawActor(bullet);
+    updateBossBulletPosition(bullet);
+}
  function updateChasingEnemy(enemy){
      drawActor(enemy);
      updateChasingEnemyPosition(enemy);
@@ -240,28 +280,57 @@ testCollisionEntity = function (entity1,entity2){       //return if colliding (t
 
 update = function(){
     ctx.clearRect(0,0,500,500);
-
+    
     frame++ 
     var timePlaying = Date.now()-timeWhenStart;
-    console.log(timePlaying)
-    if(timePlaying > 45000 && frame % 2700 === 0){
-        boss = true;
-        summonBoss();
+    if( frame % 1800 === 0){
+        isBoss = true;
+        boss1();
     }
-    if(timePlaying > 15000 && frame % 200 === 0 && boss === false){
+    for (var i in bossList){
+        updateRandomEnemy(bossList[i]);
+        var isCollision = testCollisionEntity(player,bossList[i]);
+        if(isCollision){
+            console.log("GAME OVER");
+        }
+        if(frame % (100-level) === 0){
+            generateEnemyBullet(bossList[i]);
+        } 
+        for(var k in enemyBulletList){
+            updateBossBullet(enemyBulletList[k]);
+            var isCollision = testCollisionEntity(player,enemyBulletList[k]);
+            if(isCollision){
+                delete enemyBulletList[k];
+                console.log("GAME OVER!!")
+            }
+        }
+    }
+    
+    if(timePlaying > 15000 && frame % (200-level) === 0 && isBoss === false){
         randomEnemy2();
     }
-    if(timePlaying > 30000 && frame % 500 === 0 && boss === false){
+    if(timePlaying > 30000 && frame % (500-level) === 0 && isBoss === false){
         randomEnemy3();
     }
-    if(frame % 100 === 0 && boss === false){
+    if(frame % (100-level) === 0 && isBoss === false){
         randomEnemy1();
     }
-    if(player.atkSpd === 2 && frame % 400 === 0){
-        generateBullet();   
+    if(player.atkSpd < 4 && frame % Math.round(50/player.atkSpd) === 0){
+        generateBullet(player,0,0);   
     }
-    if(player.atkSpd > 1 && frame % Math.round(50/player.atkSpd) === 0){
-        generateBullet();
+    if(player.atkSpd > 3 && frame % Math.round(50/player.atkSpd) === 0){
+        generateBullet(player,0,0);   
+    }
+    if(player.atkSpd > 10 && frame % Math.round(50/player.atkSpd) === 0){
+        generateBullet(player,10,1);  
+    }
+    if(player.atkSpd > 20 && frame % Math.round(50/player.atkSpd) === 0){ 
+        generateBullet(player,-10,-1);
+        timeUpgrading--;
+        if(timeUpgrading <= 0){
+            player.atkSpd = 10;
+            timeUpgrading = 900;
+        }
     }
     if(frame % 500 === 0){
         generateBonus();
@@ -270,60 +339,54 @@ update = function(){
         updateRandomEnemy(enemyList[key]);
         var isCollision = testCollisionEntity(player,enemyList[key]);
         if(isCollision){
-            console.log("boom!!!");
             delete enemyList[key];
-        }
-    }
-    for(var key in bossList){
-        updateRandomEnemy(bossList[key]);
-        var isCollision = testCollisionEntity(player,bossList[key]);
-        if(isCollision){
-            console.log("hit by boss!!!");
+            console.log("GAME OVER!!")
         }
     }
     for(var key in bulletList){
         updateBullet(bulletList[key]); 
+        
         for(var i in enemyList){
             var hit = testCollisionEntity(bulletList[key],enemyList[i]);
             if(hit){
                 enemyList[i].hp -= 1
-                console.log("hit");
                 delete bulletList[key];
                 if(enemyList[i].hp === 0){
                     delete enemyList[i];
+                    score += 100;
                 }
                 break;
             }
         }   
     }
     for(var key in bulletList){
-        for(var j in bossList){
-            var hit = testCollisionEntity(bulletList[key],bossList[j]);
-            if(hit){
-                bossList[j].hp -= 1
-                console.log("hit");
+        for(var key2 in bossList){
+            var hitBoss = testCollisionEntity(bulletList[key],bossList[key2]);
+            if(hitBoss){
+                bossList[key2].hp -= 2;
                 delete bulletList[key];
-                if(bossList[j].hp === 0){
-                    delete bossList[j];
-                    boss = false;
+                if(bossList[key2].hp <= 0){
+                    delete bossList[key2];
+                    isBoss = false;
+                    score += 2000;
+                    level += 1;
                 }
-                    break;
-                
+                break;
             }
         }
     }
+    
     for(var key in bonusList){
         drawActor(bonusList[key]);
         var isCollision = testCollisionEntity(player,bonusList[key]);
         if(isCollision){
             if(bonusList[key].category === 'score')
                 score +=1000;
-                console.log(score);
             if(bonusList[key].category === 'atkSpd'){
                 player.atkSpd += 2;
-                console.log(player.atkSpd)
-                if(player.atkSpd > 16){
-                    player.atkSpd =16;
+                if(player.atkSpd > 21){
+                    player.atkSpd =21;
+                    timeUpgrading += 300;
                 }
             }
             delete bonusList[key];
@@ -332,7 +395,11 @@ update = function(){
 
     drawActor(player);
     requestAnimationFrame(update);
+    ctx.font = "20px Georgia";
+    ctx.fillText("Score :" +score,50,50)
+    ctx.fillText("Level :" + level, 400,50);
 }
+
 
 update();
 
