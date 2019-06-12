@@ -1,4 +1,22 @@
+body{
+
+}
+#container{
+    margin: 0 auto;
+    border: 1px black solid;
+    position: relative;
+    width: 440px;
+    height: 680px;
+}
 #ctx{
     border: 1px black solid;
     /* cursor: none; */
+    position: absolute;
+    /* display: none; */
 }
+#but{
+    position: absolute;
+    left: 40%;
+    top: 50%;
+}
+
