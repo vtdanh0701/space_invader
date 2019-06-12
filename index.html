@@ -6,11 +6,18 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="container">
-        <!-- <button id="but">START GAME</button> -->
         <canvas id="ctx" width="440" height="680"></canvas>
+        <button id="but" onclick="gameStart()">START GAME</button>
+        <button id="restartbutton" onclick="gameStart()">PLAY AGAIN</button>
+        <p id="gameovertext">GAME OVER</p>
+        <p id="score"></p>
+        <p id="level"></p>
+        <p id="finalscore"> </p>
+        
     </div>
     <script src="js/script.js"></script>
 </body>
