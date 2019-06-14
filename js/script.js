@@ -19,6 +19,8 @@ var endGameAudio = new Audio();
 endGameAudio.src = "audio/gameOver.wav"
 var backgroundMusic = new Audio();
 backgroundMusic.src = "audio/backgroundMusic.mp3";
+var levelUp = new Audio();
+levelUp.src = "audio/levelup.wav"
 
 
 var Img = {};
@@ -48,6 +50,7 @@ Img.explosion.src = "img/explosion.png"
 var finalScore = document.getElementById("finalscore")
 var scoreText = document.getElementById("score");
 var levelText = document.getElementById("level")
+var levelTextNew = document.getElementById("displaylevel")
 var reset = document.getElementById("restartbutton");
 var gameOverText = document.getElementById("gameovertext");
 var timeWhenStart = Date.now();
@@ -65,6 +68,7 @@ var isBoss = false;
 var timeUpgrading = 900;
 var single = true;
 var triple = false;
+var highScore = 0;
 
 var player ={
     x: 250,
@@ -116,7 +120,7 @@ function boss1(){
     var width = 150;
     var height = 150;
     var color = "pink";
-    var hp = 100 + level*2;
+    var hp = 50*level;
     var atkSpd = -2 - level;
     var img = Img.boss;
     var id = Math.random()
@@ -125,13 +129,13 @@ function boss1(){
 
 function randomEnemy1(){
     var xSpeed = -2 + Math.random()*3;
-    var ySpeed = 1+ Math.random()*3;
+    var ySpeed = 2 + level
     var x = Math.random()*WIDTH;
     var y = 0;
     var width =80;
     var height = 80;
     var color = "red";
-    var hp = 1 + Math.round(level/2);
+    var hp = 2*level;
     var img = Img.enemy1;
     var id = Math.random()
     createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,img,id);
@@ -144,7 +148,7 @@ function randomEnemy2(){
     var width = 80;
     var height = 80;
     var color = "blue";
-    var hp = 3+level;
+    var hp = 5*level;
     var img = Img.enemy2;
     var id = Math.random()
     createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,img,id);
@@ -157,9 +161,9 @@ function randomEnemy3(){
     var width = 100;
     var height = 100;
     var color = "orange";
-    var hp = 20 + level;
+    var hp = 7*level;
     var img = Img.enemy3;
-    var id = Math.random()
+    var id = 3
     createEnemy(xSpeed,ySpeed,x,y,width,height,color,hp,img,id);
 }
 function createBullet(ySpeed,xSpeed,x,y,height,width,color,id){
@@ -247,21 +251,24 @@ function generateBonus(mob){
     var y = mob.y;
     var ySpeed = 7+level;
     var id = Math.random();
-    if(Math.random()<0.8){
-        var category = 'score';
-        var img = Img.bonus;
-        var width = 25;
-        var height = 25;
-    } 
-    else {
-            var category = 'atkSpd';
-            var img = Img.powerUp;
-            var width = 20;
-            var height = 40;
-    }
+    var category = 'score';
+    var img = Img.bonus;
+    var width = 25;
+    var height = 25;
     createBonus(x,y,ySpeed,width,height,img,category,id);
 }
-
+function generateAtkSpd(mob){
+    var x = mob.x;
+    var y = mob.y;
+    var ySpeed = 7+level;
+    var id = Math.random();
+    var category = 'atkSpd';
+    var img = Img.powerUp;
+    var width = 20;
+    var height = 40;
+    
+    createBonus(x,y,ySpeed,width,height,img,category,id);
+}
 function drawImageActor(actor){
     ctx.save();
     var x = actor.x-actor.width/2;
@@ -289,10 +296,20 @@ function updateBonus(bonus){
         if(enemy.x < 0 || enemy.x > WIDTH){
             enemy.xSpeed = -enemy.xSpeed;
     }
-        if(enemy.y < 0 || enemy.y > HEIGHT){
-            enemy.ySpeed = -enemy.ySpeed;
-        }
+        // if(enemy.y < 0 || enemy.y > HEIGHT){
+        //     enemy.ySpeed = -enemy.ySpeed;
+        // }
  }
+ function updateBossPosition(enemy){
+    enemy.x += enemy.xSpeed;
+    enemy.y += enemy.ySpeed;
+    if(enemy.x < 0 || enemy.x > WIDTH){
+        enemy.xSpeed = -enemy.xSpeed;
+}
+    if(enemy.y < 0 || enemy.y > 3*HEIGHT/4){
+        enemy.ySpeed = -enemy.ySpeed;
+    }
+}
  
  function updateBulletPosition(bullet){
      bullet.y -= bullet.ySpeed;
@@ -310,10 +327,14 @@ function updateBossBullet(bullet){
     updateBossBulletPosition(bullet);
 }
  
- function updateRandomEnemy(enemy){
+function updateRandomEnemy(enemy){
      drawImageActor(enemy);
      updateRandomEnemyPosition(enemy);
  }
+function updateBoss(enemy){
+    drawImageActor(enemy);
+    updateBossPosition(enemy);
+}
 
 
 document.onmousemove = function(mouse){
@@ -362,66 +383,82 @@ update = function(){
     if(gamePlay === true){
     ctx.clearRect(0,0,WIDTH,HEIGHT);
     frame++ 
-    scoreText.textContent = "Score : " + score;
-    levelText.textContent = "Level : " + level;
+    scoreText.textContent = "High Score : " + highScore;
+    levelText.textContent =  score;
+    levelTextNew.textContent = "Level : " + level;
     canvasBackground();
     var timePlaying = Date.now()-timeWhenStart;
-    if( frame % 3600 === 0){
+    if( frame % 1800 === 0 && frame != 0){
         isBoss = true;
         boss1();
     }
     for (var i in bossList){
-        updateRandomEnemy(bossList[i]);
+        updateBoss(bossList[i]);
         var isCollision = testCollisionEntity(player,bossList[i]);
         if(isCollision){
+            frame = 0
             gameOver();
         }
         if(frame % (100-level) === 0){
             generateEnemyBullet(bossList[i]);
-        } 
-        for(var k in enemyBulletList){
-            updateBossBullet(enemyBulletList[k]);
             bossBulletAudio.play();
-            var isCollision = testCollisionEntity(player,enemyBulletList[k]);
-            if(isCollision){
-                delete enemyBulletList[k];
-                gameOver();
-            }
+        }    
+    }
+    for(var k in enemyBulletList){
+        updateBossBullet(enemyBulletList[k]);
+        
+        var isCollision = testCollisionEntity(player,enemyBulletList[k]);
+        if(isCollision){
+            delete enemyBulletList[k];
+            gameOver();
         }
     }
     
-    if(timePlaying > 15000 && frame % (400-level*2) === 0 && isBoss === false){
+    if( frame % (900-level*3) === 0 && isBoss === false && frame != 0){
         randomEnemy2();
     }
-    if(timePlaying > 30000 && frame % (500-level) === 0 && isBoss === false){
+    if( frame % 600 === 0 && isBoss === false && frame != 0){
         randomEnemy3();
+        
     }
-    if(frame % (200-level*2) === 0 && isBoss === false){
+    if(frame % (200-level*3) === 0 && isBoss === false && frame != 0){
+        randomEnemy1();
+        
+    }
+    if(frame % (250-level*4) === 0 && isBoss === false && frame != 0){
+        randomEnemy1();
         randomEnemy1();
     }
+    if(frame % (180-level*4) === 0 && isBoss === false && frame != 0){
+        randomEnemy1();
+    
+    }
    
-    if(frame % Math.round(200/player.atkSpd) === 0 && single === true){
+    if(frame % Math.round(100/player.atkSpd) === 0 && single === true){
         generateBullet(player,0,0); 
         shoot.play();  
     }
-    if(player.atkSpd > 15 && frame % Math.round(200/player.atkSpd) === 0 && triple === false){
+    if(player.atkSpd > 13 && frame % Math.round(200/player.atkSpd) === 0 && triple === false){
         single = false;
         generateBullet(player,20,0);  
         generateBullet(player,-20,0);
         shoot.play();
     }
-    if(player.atkSpd > 20 && frame % Math.round(200/player.atkSpd) === 0){ 
+    if(player.atkSpd >= 17 && player.atkSpd < 22 && frame % Math.round(200/player.atkSpd) === 0){ 
         triple = true; 
         generateBullet(player,0,0);
         generateBullet(player,10,2);
         generateBullet(player,-10,-2);
         shoot.play();
-        timeUpgrading--;
-        if(timeUpgrading <= 0){
-            
-            player.atkSpd = 10;
-            timeUpgrading = 900;
-        }
+    }
+    if(player.atkSpd >= 22  && frame % Math.round(200/player.atkSpd) === 0){ 
+        triple = true; 
+        generateBullet(player,0,0);
+        generateBullet(player,10,2);
+        generateBullet(player,-10,-2);
+        generateBullet(player,10,6);
+        generateBullet(player,-10,-6);
+        shoot.play();
     }
 
     for(var key in enemyList){
@@ -442,16 +479,20 @@ update = function(){
     }
     for(var key in bulletList){
         updateBullet(bulletList[key]); 
-        
         for(var i in enemyList){
             var hit = testCollisionEntity(bulletList[key],enemyList[i]);
             if(hit){
                 enemyList[i].hp -= 1
                 
                 delete bulletList[key];
-                if(enemyList[i].hp === 0){
+                if(enemyList[i].hp === 0 || enemyList[i].y > HEIGHT){
                     generateExplosion(enemyList[i])
-                    generateBonus(enemyList[i]);
+                    if(enemyList[i].id === 3){
+                        generateAtkSpd(enemyList[i])
+                    }
+                    else{
+                        generateBonus(enemyList[i]);
+                    }
                     explosionSound.play();
                     delete enemyList[i];
                 }
@@ -468,11 +509,10 @@ update = function(){
                 bonusAudio.play();
             if(bonusList[key3].category === 'atkSpd'){
                 player.atkSpd += 2;
+                score += 500;
                 powerUpAudio.play();
-                if(player.atkSpd > 21){
-                    player.atkSpd =21;
-                    timeUpgrading += 300;
-                    triple = false;
+                if(player.atkSpd >28){
+                    player.atkSpd = 28;
                 }
             }
             delete bonusList[key3];
@@ -487,7 +527,9 @@ update = function(){
                 if(bossList[key2].hp <= 0){
                     generateExplosion(bossList[key2])
                     bossDie.play();
+                    levelUp.play();
                     delete bossList[key2];
+                    frame = 0;
                     isBoss = false;
                     score += 2000;
                     level += 1;
@@ -496,8 +538,6 @@ update = function(){
             }
         }
     }
-    
-    console.log(player.atkSpd);
     drawImageActor(player);
     requestAnimationFrame(update);
 }}
@@ -549,21 +589,27 @@ function gameStart(){
 }
 canvasBackgroundWaiting();
 function gameOver(){
-    endGameAudio.play();
-     finalScore.textContent = "Your Score: " + score;
-     gamePlay = false;
-     bulletList ={};
-     enemyBulletList = {};
-     enemyList ={};
-     bonusList ={};
-     bossList ={};
-     explosionList = {};
-     score = 0;
-     level = 1;
-     frame = 0;
-     player.atkSpd = 10;
-     isBoss = false;
-     single = true;
-     gameOverText.style.display = "inline-block";
-     reset.style.display = "inline-block";
+    if(score > highScore){
+        highScore = score;
+        finalScore.textContent = "New High Score: " + highScore;
+    }
+    else{
+        finalScore.textContent = "High Score: " + highScore;
+    }
+    endGameAudio.play(); 
+    gamePlay = false;
+    bulletList ={};
+    enemyBulletList = {};
+    enemyList ={};
+    bonusList ={};
+    bossList ={};
+    explosionList = {};
+    score = 0;
+    level = 1;
+    frame = 0;
+    player.atkSpd = 10;
+    isBoss = false;
+    single = true;
+    gameOverText.style.display = "inline-block";
+    reset.style.display = "inline-block";
 }

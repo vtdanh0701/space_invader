@@ -3,13 +3,13 @@ body{
 }
 #container{
     margin: 0 auto;
-    border: 1px black solid;
+    border: 1px green solid;
     position: relative;
     width: 440px;
     height: 680px;
 }
 #ctx{
-    border: 1px black solid;
+    border: 1px green solid;
     /* cursor: none; */
     position: absolute;
     /* display: none; */
@@ -20,7 +20,12 @@ body{
     top: 50%;
     font-family: 'Press Start 2P', cursive;
     font-size: 20px;
-    color: blue;
+    color: lightblue;
+    background : transparent;
+    border: none;
+}
+#but:hover{
+    background: blue;
 }
 #restartbutton{
     position: absolute;
@@ -30,15 +35,19 @@ body{
     font-size: 20px;
     color: blue;
     display: none;
+    background : transparent;
+    border: none;
 }
-
+#restartbutton:hover{
+    background: white;
+}
 #gameovertext{
     position: absolute;
     left: 29%;
     top: 40%;
     font-family: 'Press Start 2P', cursive;
     font-size: 20px;
-    color: blue;
+    color: red;
     display: none;
 }
 #score{
@@ -52,19 +61,29 @@ body{
 }
 #level{
     position: absolute;
-    left: 320px;
-    top: 10px;
+    left: 10px;
+    top: 30px;
     font-family: 'Press Start 2P', cursive;
     font-size: 12px;
     color: yellowgreen;
     
 }
+#finalscorecontainer{
+    text-align: center;
+    margin-top: 50%;
+}
 #finalscore{
     position: relative;
-    left: 100px;
-    top: 240px;
     font-family: 'Press Start 2P', cursive;
     font-size: 15px;
     color: yellowgreen;
     
+}
+#displaylevel{
+    position: absolute;
+    left: 320px;
+    top: 10px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    color: yellowgreen;
 }

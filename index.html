@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-<body>
+<body background="img/backgroundHTML .jpg">
     <div id="container">
         <canvas id="ctx" width="440" height="680"></canvas>
         <button id="but" onclick="gameStart()">START GAME</button>
@@ -16,7 +16,10 @@
         <p id="gameovertext">GAME OVER</p>
         <p id="score"></p>
         <p id="level"></p>
-        <p id="finalscore"> </p>
+        <p id="displaylevel"></p>
+        <div id="finalscorecontainer">
+            <p id="finalscore"> </p>
+        </div>
         
     </div>
     <script src="js/script.js"></script>
